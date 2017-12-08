@@ -154,9 +154,14 @@ Search text keyword in the email message. Example:
             if term[0] in "+-":
                 cond = term[1:]
                 lneg = term[0] == "-"
+            elif term.startswith("not:"):
+                cond = cond[4:]
+                lneg = True
             else:
-                cond = term[term.find(":") + 1:]
-                lneg = term.startswith("not:")
+                cond = term
+                lneg = False
+            if cond.startswith('is:'):
+                cond = cond[3:]
             if cond == "complete":
                 q = Q(is_complete=True)
             elif cond == "pull":
