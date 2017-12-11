@@ -150,7 +150,7 @@ Search text keyword in the email message. Example:
             if cond[0] == "<" and cond[-1] == ">":
                 cond = cond[1:-1]
             q = Q(message_id=cond)
-        elif term.startswith("is:") or term.startswith("not:") or term[0] in "+-":
+        elif term.startswith("is:") or term.startswith("has:") or term.startswith("not:") or term[0] in "+-":
             if term[0] in "+-":
                 cond = term[1:]
                 lneg = term[0] == "-"
@@ -160,13 +160,13 @@ Search text keyword in the email message. Example:
             else:
                 cond = term
                 lneg = False
-            if cond.startswith('is:'):
-                cond = cond[3:]
-            if cond == "complete":
+            if cond.find(':') < 0:
+                cond = "is:" + cond
+            if cond == "is:complete":
                 q = Q(is_complete=True)
-            elif cond == "pull":
+            elif cond == "is:pull":
                 q = Q(subject__contains='[PULL') | Q(subject__contains='[GIT PULL')
-            elif cond == "reviewed":
+            elif cond == "is:reviewed":
                 q = Q(properties__name="reviewed",
                       properties__value="true")
             elif cond in ("obsoleted", "old"):
@@ -174,26 +174,25 @@ Search text keyword in the email message. Example:
                       properties__value__isnull=False) & \
                     ~Q(properties__name="obsoleted-by",
                       properties__value__iexact='')
-            elif cond == "applied":
+            elif cond == "is:applied":
                 q = Q(properties__name="git.tag",
                       properties__value__isnull=False) & \
                     ~Q(properties__name="git.tag",
                       properties__value__iexact='')
-            elif cond == "tested":
+            elif cond == "is:tested":
                 q = Q(properties__name="testing.done",
                       properties__value="true")
-            elif cond == "merged":
+            elif cond == "is:merged":
                 q = Q(is_merged=True)
+            elif term.startswith("has:replies"):
+                q = Q(last_comment_date__isnull=False)
+            elif term.startswith("has:"):
+                cond = term[term.find(":") + 1:]
+                q = Q(properties__name=cond)
             else:
                 q = as_keywords(term)
             if lneg:
                 neg = not neg
-        elif term.startswith("has:"):
-            cond = term[term.find(":") + 1:]
-            if cond == "replies":
-                q = Q(last_comment_date__isnull=False)
-            else:
-                q = Q(properties__name=cond)
         elif term.startswith("project:"):
             cond = term[term.find(":") + 1:]
             self._projects.add(cond)
