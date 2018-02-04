@@ -13,9 +13,11 @@ from django.template import loader
 
 from .models import Project, Message
 from .search import SearchEngine
-from rest_framework import permissions, serializers, viewsets, filters, mixins
+from rest_framework import permissions, serializers, viewsets, filters, mixins, renderers
+from rest_framework.decorators import detail_route
 from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import HyperlinkedIdentityField
+from rest_framework.response import Response
 
 SEARCH_PARAM = 'q'
 
@@ -76,7 +78,9 @@ class HyperlinkedMessageField(HyperlinkedIdentityField):
 class BaseMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ('message_id', 'subject', 'date', 'sender', 'recipients')
+        fields = ('resource_uri', 'message_id', 'subject', 'date', 'sender', 'recipients')
+
+    resource_uri = HyperlinkedMessageField(view_name='messages-detail')
 
     def format_name_addr(self, name, addr):
         d = {}
@@ -123,9 +127,10 @@ class SeriesSerializer(BaseMessageSerializer):
     class Meta:
         model = Message
         fields = ('resource_uri',) + BaseMessageSerializer.Meta.fields + (
-             'stripped_subject', 'last_reply_date', 'is_complete', 'is_merged')
+             'stripped_subject', 'last_reply_date', 'is_complete', 'is_merged', 'message')
 
     resource_uri = HyperlinkedMessageField(view_name='series-detail')
+    message = HyperlinkedMessageField(view_name='messages-detail')
 
 class SeriesSerializerFull(SeriesSerializer):
     class Meta:
@@ -200,3 +205,46 @@ class ProjectSeriesViewSet(ProjectMessagesViewSetMixin,
             for i in series.patches:
                 self.collect_replies(i, series.replies)
         return series
+
+# Messages
+
+# TODO: add POST endpoint connected to email plugin?
+
+class MessageSerializer(BaseMessageSerializer):
+    class Meta:
+        model = Message
+        fields = BaseMessageSerializer.Meta.fields + ('mbox', )
+
+    def get_mbox(self, obj):
+        return obj.get_mbox()
+    mbox = SerializerMethodField()
+
+class StaticTextRenderer(renderers.BaseRenderer):
+    media_type = 'text/plain'
+    format = 'mbox'
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        renderer_context = renderer_context or {}
+        response = renderer_context.get('response')
+        if response and response.exception:
+            return '%d %s' % (response.status_code, response.status_text.title())
+        else:
+            return data
+
+class MessagesViewSet(ProjectMessagesViewSetMixin,
+                      BaseMessageViewSet):
+    serializer_class = MessageSerializer
+
+    @detail_route(renderer_classes=[StaticTextRenderer])
+    def mbox(self, request, *args, **kwargs):
+        message = self.get_object()
+        return Response(message.get_mbox())
+
+    @detail_route()
+    def replies(self, request, *args, **kwargs):
+        message = self.get_object()
+        replies = Message.objects.filter(in_reply_to=message.message_id,
+                                         project=self.kwargs['projects_pk']).order_by('date')
+        serializer = BaseMessageSerializer(replies, many=True,
+                                           context=self.get_serializer_context())
+        return Response(serializer.data)
