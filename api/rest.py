@@ -253,17 +253,42 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         view_name="series-list", lookup_field="pk", lookup_url_kwarg="projects_pk"
     )
 
+    def __init__(self, *args, **kwargs):
+        self.detailed = kwargs.pop("detailed", False)
+        super(ProjectSerializer, self).__init__(*args, **kwargs)
+
     def get_fields(self):
         fields = super(ProjectSerializer, self).get_fields()
         request = self.context["request"]
-        dispatch_module_hook("rest_project_fields_hook", request=request, fields=fields)
+        dispatch_module_hook(
+            "rest_project_fields_hook",
+            request=request,
+            fields=fields,
+            detailed=self.detailed,
+        )
         return fields
+
+
+class ProjectSerializerFull(ProjectSerializer):
+    class Meta:
+        model = Project
+        fields = ProjectSerializer.Meta.fields
+
+    def __init__(self, *args, **kwargs):
+        if not "detailed" in kwargs:
+            kwargs["detailed"] = True
+        super(ProjectSerializerFull, self).__init__(*args, **kwargs)
 
 
 class ProjectsViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all().order_by("id")
     serializer_class = ProjectSerializer
     permission_classes = (PatchewPermission,)
+
+    def get_serializer_class(self, *args, **kwargs):
+        if self.lookup_field in self.kwargs:
+            return ProjectSerializerFull
+        return ProjectSerializer
 
     @action(
         methods=["get", "put"], detail=True, permission_classes=[MaintainerPermission]

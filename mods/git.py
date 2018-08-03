@@ -142,7 +142,7 @@ class GitModule(PatchewModule):
             response["head"] = head
         return response
 
-    def rest_project_fields_hook(self, request, fields):
+    def rest_project_fields_hook(self, request, fields, detailed):
         fields["mirror"] = PluginMethodField(obj=self, required=False)
 
     def rest_series_fields_hook(self, request, fields, detailed):

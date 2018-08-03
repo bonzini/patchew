@@ -510,8 +510,9 @@ class TestingModule(PatchewModule):
     def get_testing_probes(self, project, request, format):
         return self.get_capability_probes(project)
 
-    def rest_project_fields_hook(self, request, fields):
-        fields["testing_probes"] = PluginMethodField(obj=self)
+    def rest_project_fields_hook(self, request, fields, detailed):
+        if detailed:
+            fields["testing_probes"] = PluginMethodField(obj=self)
 
     def tester_check_in(self, project, tester):
         assert project
