@@ -11,7 +11,7 @@ import jsonfield.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0050_message_flags_postgres_fts'),
+        ('api', '0049_populate_message_flags'),
     ]
 
     operations = [
