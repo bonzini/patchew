@@ -49,29 +49,13 @@ class PatchewModule(object):
         data["module"] = self
         return Template(tmpl).render(Context(data))
 
-    def _build_map_scm(self, request, project, prefix, scm):
-        prefix = prefix + scm.name + "."
-        def _build_map_items():
-            r = {}
-            for p in project.get_properties().keys():
-                if not p.startswith(prefix):
-                    continue
-                name = p[len(prefix):]
-                name = name[:name.rfind(".")]
-                if name in r:
-                    continue
-                pref = prefix + name + "."
-                r[name] = {
-                          "name": name,
-                          "html": self._build_one(request, project,
-                                                  pref, scm.item)
-                          }
-            return list(r.values())
-
-        schema_html = self._build_one(request, project, prefix,
-                                      scm.item)
+    def _build_map_scm(self, request, project, prefix, config, scm):
+        schema_html = self._build_one(request, project, prefix, scm.item)
         item = {"html": schema_html}
-        items = _build_map_items()
+        items = [{
+            "name": name,
+            "html": self._build_one(request, project, prefix + name + ".",
+                                    value, scm.item)} for name, value in config.items()]
         return self._render_template(request, project, TMPL_MAP,
                                      schema=scm,
                                      item_schema=scm.item,
@@ -79,113 +63,69 @@ class PatchewModule(object):
                                      items=items,
                                      item=item)
 
-    def _build_array_scm(self, request, project, prefix, scm):
+    def _build_array_scm(self, request, project, prefix, config, scm, show_save_button):
         members = [self._build_one(request, project,
-                                                prefix, x) for x in scm.members]
-        show_save_button = False
-        for m in scm.members:
-            if type(m) == StringSchema:
-                show_save_button = True
-                break
+                                   prefix + x.name + ".",
+                                   config[x.name], x) for x in scm.members]
         return self._render_template(request, project, TMPL_ARRAY,
                                      schema=scm,
                                      members=members,
                                      show_save_button=show_save_button,
                                      prefix=prefix)
 
-    def _build_string_scm(self, request, project, prefix, scm):
-        prop_name = prefix + scm.name
-        prop_value = project.get_property(prop_name)
+    def _build_string_scm(self, request, project, prefix, config, scm):
         return self._render_template(request, project, TMPL_STRING,
                                      schema=scm,
                                      name=scm.name,
                                      prefix=prefix,
-                                     value=prop_value)
+                                     value=config)
 
-    def _build_integer_scm(self, request, project, prefix, scm):
-        prop_name = prefix + scm.name
-        prop_value = project.get_property(prop_name)
+    def _build_integer_scm(self, request, project, config, scm):
         return self._render_template(request, project, TMPL_INTEGER,
                                      schema=scm,
                                      name=scm.name,
                                      prefix=prefix,
-                                     value=prop_value)
+                                     value=config)
 
-    def _build_boolean_scm(self, request, project, prefix, scm):
-        prop_name = prefix + scm.name
-        prop_value = project.get_property(prop_name)
+    def _build_boolean_scm(self, request, project, config, scm):
         return self._render_template(request, project, TMPL_BOOLEAN,
                                      schema=scm,
                                      name=scm.name,
                                      prefix=prefix,
-                                     value=prop_value)
+                                     value=config)
 
-    def _build_enum_scm(self, request, project, prefix, scm):
-        prop_name = prefix + scm.name
-        prop_value = project.get_property(prop_name)
+    def _build_enum_scm(self, request, project, config, scm):
         return self._render_template(request, project, TMPL_ENUM,
                                      schema=scm,
                                      name=scm.name,
                                      prefix=prefix,
-                                     value=prop_value)
+                                     value=config)
 
-    def _build_one(self, request, project, prefix, scm):
+    def _build_one(self, request, project, prefix, config, scm, show_save_button=False):
         if type(scm) == MapSchema:
-            return self._build_map_scm(request, project, prefix, scm)
+            return self._build_map_scm(request, project, prefix, config, scm)
         elif type(scm) == StringSchema:
-            return self._build_string_scm(request, project, prefix, scm)
+            return self._build_string_scm(request, project, prefix, config, scm)
         elif type(scm) == IntegerSchema:
-            return self._build_integer_scm(request, project, prefix, scm)
+            return self._build_integer_scm(request, project, prefix, config, scm)
         elif type(scm) == BooleanSchema:
-            return self._build_boolean_scm(request, project, prefix, scm)
+            return self._build_boolean_scm(request, project, prefix, config, scm)
         elif type(scm) == EnumSchema:
-            return self._build_enum_scm(request, project, prefix, scm)
+            return self._build_enum_scm(request, project, prefix, config, scm)
         elif type(scm) == ArraySchema:
-            return self._build_array_scm(request, project, prefix, scm)
+            return self._build_array_scm(request, project, prefix, config, scm, show_save_button)
         assert False
 
     def build_config_html(self, request, project):
-        assert not isinstance(self.project_config_schema, StringSchema)
-        assert not isinstance(self.project_config_schema, IntegerSchema)
+        assert isinstance(self.project_config_schema, ArraySchema)
         scm = self.project_config_schema
-        tmpl = self._build_one(request, project, scm.name + ".", scm)
+        config = self.get_project_config(project)
+        tmpl = self._build_one(request, project, scm.name + ".", config, scm, True)
         tmpl += self._render_template(request, project, TMPL_END)
         return tmpl
 
-    def _get_map_scm(self, project, prop_name, scm):
-        prefix = prop_name + "."
-        result = {}
-        for p in project.get_properties().keys():
-            if not p.startswith(prefix):
-                continue
-            name = p[len(prefix):]
-            name = name[:name.rfind(".")]
-            if name in result:
-                continue
-            assert scm.item.name == '{name}'
-            value = self._get_one(project, prefix + name, scm.item)
-            result[name] = value
-        return result
-
-    def _get_array_scm(self, project, prop_name, scm):
-        prefix = prop_name + "."
-        result = {}
-        for i in scm.members:
-            assert i.name != '{name}'
-            result[i.name] = self._get_one(project, prefix + i.name, i)
-        return result
-
-    def _get_one(self, project, prop_name, scm):
-        if type(scm) == MapSchema:
-            return self._get_map_scm(project, prop_name, scm)
-        elif type(scm) == ArraySchema:
-            return self._get_array_scm(project, prop_name, scm)
-        else:
-            return project.get_property(prop_name)
-
     def get_project_config(self, project):
-        scm = self.project_config_schema
-        return self._get_one(project, scm.name, scm)
+        return project.config.get(self.project_config_schema.name, {})
 
 _loaded_modules = {}
 
@@ -423,9 +363,9 @@ function properties_save(btn) {
     $(btn).addClass("disabled");
     $(btn).text("Saving...");
     $(btn).parent().find(".save-message").remove();
-    patchew_api_do("set-project-properties",
+    patchew_api_do("set-project-config",
                    { project: "{{ project.name }}",
-                     properties: props })
+                     config: props })
         .done(function (data) {
             save_done(btn, true);
         })
@@ -466,23 +406,8 @@ function map_delete_item(btn) {
     if (!window.confirm("Really delete '" + name +"'?")) {
         return;
     }
-    $(btn).addClass("disabled");
-    $(btn).text("Deleting...");
-    $(btn).parent().find(".delete-message").remove();
-    patchew_api_do("delete-project-properties-by-prefix",
-                   { project: "{{ project.name }}",
-                     prefix: prefix })
-        .done(function (data) {
-            container = $(btn).parent().parent().parent();
-            container.remove();
-        })
-        .fail(function (data, text, error) {
-            $(btn).removeClass("disabled");
-            $(btn).text("Delete");
-            info = $("<div class=\\"alert alert-danger delete-message\\"></div>");
-            info.html("Error: " + error);
-            info.insertBefore($(btn));
-        });
+    container = $(btn).parent().parent().parent();
+    container.remove();
 }
 function enum_change(which) {
     val = $(which).val();

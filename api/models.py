@@ -171,6 +171,7 @@ class Project(models.Model):
                                                   "top project which has "
                                                   "parent_project=NULL"))
     maintainers = models.ManyToManyField(User, blank=True)
+    config = jsonfield.JSONField(default={})
 
     def __str__(self):
         return self.name
