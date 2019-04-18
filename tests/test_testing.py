@@ -12,6 +12,7 @@ import abc
 import subprocess
 
 from api.models import Message, Result
+from api.search import FLAG_TESTED
 
 from .patchewtest import PatchewTestCase, main
 
@@ -56,7 +57,6 @@ class TestingTestCase(PatchewTestCase, metaclass=abc.ABCMeta):
         if 'status' not in kwargs:
             kwargs['status'] = Result.SUCCESS
         self.modify_test_result(obj, **kwargs)
-        obj.set_property("testing.done", True)
 
     def do_testing_report(self, **report):
         self.api_login()
@@ -167,6 +167,7 @@ class MessageTestingTest(TestingTestCase):
 
     def do_testing_done(self, **kwargs):
         self._do_testing_done(self.msg, **kwargs)
+        self.msg.add_flag(FLAG_TESTED)
 
     def do_testing_report(self, **report):
         r = super(MessageTestingTest, self).do_testing_report(**report)
@@ -353,7 +354,7 @@ class TestingResetTest(PatchewTestCase):
                                   "testing.a": Result.SUCCESS,
                                   "testing.b": Result.SUCCESS,
                                   "testing.c": Result.FAILURE})
-        self.assertTrue(msg.get_property("testing.done"))
+        self.assertIn(FLAG_TESTED, msg.flags)
 
         self.api_login()
         self.client.post('/login/', {'username': self.user, 'password': self.password})
@@ -364,7 +365,7 @@ class TestingResetTest(PatchewTestCase):
                                   "testing.a": Result.PENDING,
                                   "testing.b": Result.SUCCESS,
                                   "testing.c": Result.FAILURE})
-        self.assertFalse(msg.get_property("testing.done"))
+        self.assertNotIn(FLAG_TESTED, msg.flags)
 
         self.client.get('/testing-reset/%s/?type=message&test=b' % msg.message_id)
         self.client.get('/testing-reset/%s/?type=message&test=c' % msg.message_id)
@@ -372,7 +373,7 @@ class TestingResetTest(PatchewTestCase):
                                   "testing.a": Result.PENDING,
                                   "testing.b": Result.PENDING,
                                   "testing.c": Result.PENDING})
-        self.assertFalse(msg.get_property("testing.done"))
+        self.assertNotIn(FLAG_TESTED, msg.flags)
 
 
 class TestingDisableTest(PatchewTestCase):
