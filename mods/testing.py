@@ -20,6 +20,7 @@ import time
 import math
 from api.views import APILoginRequiredView
 from api.models import (Message, MessageResult, Project, ProjectResult, Result)
+import api.rest
 from api.rest import PluginMethodField, TestPermission, reverse_detail
 from api.search import SearchEngine
 from event import emit_event, declare_event, register_handler
@@ -50,7 +51,7 @@ class TestingLogViewer(LogView):
             raise Http404("Object not found: " + project_or_series)
         return _instance.get_testing_result(obj, testing_name)
 
-class ResultDataSerializer(serializers.Serializer):
+class ResultDataSerializer(api.rest.ResultDataSerializer):
     # TODO: is_timeout should be present iff the result is a failure
     is_timeout = BooleanField(required=False)
     head = CharField()
