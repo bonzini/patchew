@@ -571,13 +571,3 @@ class TestingCapabilitiesView(APILoginRequiredView):
             raise Http404("Project '%s' not found" % project)
         probes = _instance.get_capability_probes(po)
         return probes
-
-class UntestView(APILoginRequiredView):
-    name = "untest"
-    allowed_groups = ["testers"]
-
-    def handle(self, request, terms):
-        se = SearchEngine()
-        q = se.search_series(user=request.user, *terms)
-        for s in q:
-            _instance.clear_and_start_testing(s)
