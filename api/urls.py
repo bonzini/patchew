@@ -16,7 +16,7 @@ from rest_framework_nested.routers import NestedDefaultRouter
 from rest_framework.schemas import get_schema_view
 
 from . import rest
-from mod import dispatch_module_hook
+from .mod import dispatch_module_hook
 
 
 router = DefaultRouter(trailing_slash=True)

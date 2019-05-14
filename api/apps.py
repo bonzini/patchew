@@ -15,6 +15,6 @@ class ApiConfig(AppConfig):
     verbose_name = "Patchew Core"
 
     def ready(self):
-        from mod import load_modules
+        from api.mod import load_modules
 
         load_modules()

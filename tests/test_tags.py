@@ -11,7 +11,7 @@
 import email
 import email.parser
 import email.policy
-from mbox import decode_payload
+from patchew.mbox import decode_payload
 
 from .patchewtest import PatchewTestCase, main
 

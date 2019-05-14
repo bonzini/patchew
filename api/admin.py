@@ -10,7 +10,7 @@
 
 from django.contrib import admin
 from .models import Message, Module, Project
-from mod import get_module
+from api.mod import get_module
 
 
 class ProjectAdmin(admin.ModelAdmin):

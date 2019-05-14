@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.db.models import Exists, OuterRef
-from mod import PatchewModule
+from api.mod import PatchewModule
 from api.models import Message
 from api.rest import PluginMethodField
 import rest_framework

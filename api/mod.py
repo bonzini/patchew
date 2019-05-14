@@ -15,7 +15,7 @@ from django.conf import settings
 from django.template import Template, Context
 import traceback
 import configparser
-import schema
+from api import schema
 
 
 class PatchewModule(object):

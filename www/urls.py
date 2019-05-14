@@ -11,7 +11,7 @@
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
 from . import views
-from mod import dispatch_module_hook
+from api.mod import dispatch_module_hook
 
 urlpatterns = []
 dispatch_module_hook("www_url_hook", urlpatterns=urlpatterns)

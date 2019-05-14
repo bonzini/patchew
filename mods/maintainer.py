@@ -13,11 +13,11 @@ from django.conf.urls import url
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect, HttpResponseBadRequest
 from django.urls import reverse
-from mod import PatchewModule
+from api.mod import PatchewModule
 from api.models import Message, QueuedSeries, WatchedQuery
 from django.shortcuts import render
 from api.search import SearchEngine
-from event import declare_event, register_handler, emit_event
+from api.event import declare_event, register_handler, emit_event
 
 
 class MaintainerModule(PatchewModule):

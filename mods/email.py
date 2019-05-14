@@ -14,14 +14,14 @@ from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.template import Template, Context
 from django.conf import settings
-from mod import PatchewModule
+from api.mod import PatchewModule
 import smtplib
 import email
 import email.utils
 import uuid
 from api.models import Message, Project
-from event import register_handler, get_events_info
-import schema
+from api.event import register_handler, get_events_info
+from api import schema
 
 _default_config = """
 [smtp]

@@ -8,7 +8,7 @@
 # This work is licensed under the MIT License.  Please see the LICENSE file or
 # http://opensource.org/licenses/MIT.
 
-import mbox
+from patchew import mbox
 
 from .patchewtest import PatchewTestCase, main
 

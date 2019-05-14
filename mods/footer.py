@@ -8,7 +8,7 @@
 # This work is licensed under the MIT License.  Please see the LICENSE file or
 # http://opensource.org/licenses/MIT.
 
-from mod import PatchewModule
+from api.mod import PatchewModule
 
 _default_config = """
 <!-- your HTML here -->

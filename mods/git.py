@@ -16,13 +16,12 @@ from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.utils.html import format_html
-from mod import PatchewModule
-from event import declare_event, register_handler
+from api.mod import PatchewModule
+from api.event import declare_event, register_handler
 from api.models import Message, Project, Result
-import api.rest
 from api.rest import PluginMethodField, SeriesSerializer, reverse_detail
 from patchew.logviewer import LogView
-import schema
+from api import rest, schema
 from rest_framework import generics, serializers
 from rest_framework.fields import CharField, SerializerMethodField
 
@@ -48,7 +47,7 @@ class GitLogViewer(LogView):
         return obj.git_result
 
 
-class ResultDataSerializer(api.rest.ResultDataSerializer):
+class ResultDataSerializer(rest.ResultDataSerializer):
     # TODO: should be present iff the result is success or failure
     base = CharField(required=False)
 

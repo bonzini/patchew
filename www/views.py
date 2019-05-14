@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.conf import settings
 import api
-from mod import dispatch_module_hook
+from api.mod import dispatch_module_hook
 import subprocess
 
 PAGE_SIZE = 50

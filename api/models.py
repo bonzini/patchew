@@ -19,11 +19,11 @@ from django.urls import reverse
 import jsonfield
 import lzma
 
-from mbox import MboxMessage, decode_payload
+from patchew.mbox import MboxMessage, decode_payload
 from patchew.tags import lines_iter
-from event import emit_event, declare_event
+from .event import emit_event, declare_event
 from .blobs import save_blob, load_blob
-import mod
+from api import mod
 
 
 class LogEntry(models.Model):

@@ -14,17 +14,16 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.html import format_html
-from mod import PatchewModule
+from api.mod import PatchewModule
 import datetime
 import time
 import math
 from api.models import Message, MessageResult, Project, ProjectResult, Result
-import api.rest
 from api.rest import PluginMethodField, TestPermission, reverse_detail
 from api.search import SearchEngine
-from event import emit_event, declare_event, register_handler
+from api.event import emit_event, declare_event, register_handler
 from patchew.logviewer import LogView
-import schema
+from api import rest, schema
 from rest_framework import serializers, generics
 from rest_framework.fields import CharField, BooleanField
 from rest_framework.response import Response
@@ -52,7 +51,7 @@ class TestingLogViewer(LogView):
         return _instance.get_testing_result(obj, testing_name)
 
 
-class ResultDataSerializer(api.rest.ResultDataSerializer):
+class ResultDataSerializer(rest.ResultDataSerializer):
     # TODO: is_timeout should be present iff the result is a failure
     is_timeout = BooleanField(required=False)
     head = CharField()

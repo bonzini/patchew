@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.http import Http404, HttpResponseRedirect
 from django.template import loader
 
-from mod import dispatch_module_hook
+from .mod import dispatch_module_hook
 from .models import Project, ProjectResult, Message, MessageResult, Result
 from .search import SearchEngine
 from rest_framework import (
@@ -38,7 +38,7 @@ from rest_framework.relations import HyperlinkedIdentityField
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import rest_framework
-from mbox import addr_db_to_rest, MboxMessage
+from patchew.mbox import addr_db_to_rest, MboxMessage
 from rest_framework.parsers import BaseParser
 
 SEARCH_PARAM = "q"

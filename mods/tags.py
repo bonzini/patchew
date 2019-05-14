@@ -8,9 +8,9 @@
 # This work is licensed under the MIT License.  Please see the LICENSE file or
 # http://opensource.org/licenses/MIT.
 
-from mod import PatchewModule
-from mbox import addr_db_to_rest, parse_address
-from event import register_handler, emit_event, declare_event
+from api.mod import PatchewModule
+from patchew.mbox import addr_db_to_rest, parse_address
+from api.event import register_handler, emit_event, declare_event
 from api.models import Message
 from api.rest import PluginMethodField
 import rest_framework
