@@ -107,7 +107,7 @@ class RestTest(PatchewTestCase):
         self.p.save()
         resp = self.api_client.get(self.PROJECT_BASE + "config/")
         self.assertEquals(resp.status_code, 401)
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.get(self.PROJECT_BASE + "config/")
         self.assertEquals(resp.status_code, 200)
         self.assertEquals(resp.data["git"]["push_to"], "/tmp/aaa")
@@ -118,7 +118,7 @@ class RestTest(PatchewTestCase):
             self.PROJECT_BASE + "config/", new_config, format="json"
         )
         self.assertEquals(resp.status_code, 401)
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.put(
             self.PROJECT_BASE + "config/", new_config, format="json"
         )
@@ -134,7 +134,7 @@ class RestTest(PatchewTestCase):
             self.p.id,
             "20160628014747.20971-1-famz@redhat.com",
         )
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp_before = self.api_client.get(
             self.PROJECT_BASE + "series/" + "20160628014747.20971-1-famz@redhat.com/"
         )
@@ -164,7 +164,7 @@ class RestTest(PatchewTestCase):
 
     def test_project_post_minimal(self):
         data = {"name": "keycodemapdb"}
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(self.REST_BASE + "projects/", data=data)
         self.assertEquals(resp.status_code, 201)
         self.assertEquals(
@@ -176,7 +176,7 @@ class RestTest(PatchewTestCase):
         self.assertEquals(resp.data["name"], data["name"])
 
     def test_project_post(self):
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         data = {
             "name": "keycodemapdb",
             "mailing_list": "qemu-devel@nongnu.org",
@@ -439,7 +439,7 @@ class RestTest(PatchewTestCase):
             + test_message_id
             + "/"
         )
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.delete(
             self.REST_BASE
             + "projects/"
@@ -448,7 +448,7 @@ class RestTest(PatchewTestCase):
             + test_message_id
             + "/"
         )
-        self.api_client.logout()
+        self.api_logout()
         resp_after = self.api_client.get(
             self.REST_BASE
             + "projects/"
@@ -470,7 +470,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0022-another-simple-patch.json.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.PROJECT_BASE + "messages/", data, content_type="application/json"
         )
@@ -491,7 +491,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0022-another-simple-patch.json.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.PROJECT_BASE + "messages/", data, content_type="application/json"
         )
@@ -519,7 +519,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0004-multiple-patch-reviewed.mbox.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.PROJECT_BASE + "messages/", data, content_type="message/rfc822"
         )
@@ -538,7 +538,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0001-simple-patch.mbox.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.PROJECT_BASE + "messages/", data, content_type="message/rfc822"
         )
@@ -558,7 +558,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0024-multiple-project-patch.json.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.REST_BASE + "messages/", data, content_type="application/json"
         )
@@ -583,7 +583,7 @@ class RestTest(PatchewTestCase):
         dp = self.get_data_path("0023-multiple-project-patch.mbox.gz")
         with open(dp, "r") as f:
             data = f.read()
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         resp = self.api_client.post(
             self.REST_BASE + "messages/", data, content_type="message/rfc822"
         )
@@ -615,7 +615,7 @@ class RestTest(PatchewTestCase):
 
     def test_non_maintainer_create_message(self):
         self.create_user(username="test", password="userpass")
-        self.api_client.login(username="test", password="userpass")
+        self.api_login()
         dp = self.get_data_path("0023-multiple-project-patch.mbox.gz")
         with open(dp, "r") as f:
             data = f.read()
@@ -637,7 +637,7 @@ class RestTest(PatchewTestCase):
 
     def test_maintainer_create_message(self):
         test = self.create_user(username="test", password="userpass")
-        self.api_client.login(username="test", password="userpass")
+        self.api_login()
         self.p.maintainers = (test,)
         dp = self.get_data_path("0023-multiple-project-patch.mbox.gz")
         with open(dp, "r") as f:
@@ -663,7 +663,7 @@ class RestTest(PatchewTestCase):
         with open(dp, "r") as f:
             data = f.read()
         self.create_user(username="test", password="userpass", groups=["importers"])
-        self.api_client.login(username="test", password="userpass")
+        self.api_login()
         resp = self.api_client.post(
             self.REST_BASE + "messages/", data, content_type="message/rfc822"
         )

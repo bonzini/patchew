@@ -197,7 +197,7 @@ class GitTest(PatchewTestCase):
     def test_rest_unapplied(self):
         self.cli_import("0004-multiple-patch-reviewed.mbox.gz")
         self.cli_import("0001-simple-patch.mbox.gz")
-        self.api_client.login(username=self.user, password=self.password)
+        self.api_login()
         self.api_client.put(
             self.PROJECT_BASE
             + "series/20160628014747.20971-1-famz@redhat.com/results/git/",
