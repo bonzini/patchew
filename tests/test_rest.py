@@ -729,6 +729,29 @@ class RestTest(PatchewTestCase):
             OrderedDict([("name", "123"), ("address", "shubhamjain7495@gmail.com")]),
         )
 
+    def test_patch_maintainers(self):
+        resp = self.apply_and_retrieve(
+            "0004-multiple-patch-reviewed.mbox.gz",
+            self.p.id,
+            "1469192015-16487-1-git-send-email-berrange@redhat.com",
+        )
+        self.assertEqual(resp.status_code, 200)
+        uri = resp.data["resource_uri"]
+        message = Message.objects.get(message_id=resp.data["message_id"])
+        self.assertEqual(message.maintainers, [])
+        self.api_client.login(username=self.user, password=self.password)
+        data = {
+            "maintainers": [{"name": "Paolo Bonzini", "address": "pbonzini@redhat.com"}]
+        }
+        resp = self.api_client.patch(
+            uri, data=json.dumps(data), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, 200)
+        message = Message.objects.get(message_id=resp.data["message_id"])
+        self.assertEqual(
+            message.maintainers, [["Paolo Bonzini", "pbonzini@redhat.com"]]
+        )
+
     def test_message_replies(self):
         series = self.apply_and_retrieve(
             "0004-multiple-patch-reviewed.mbox.gz",

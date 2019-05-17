@@ -22,6 +22,7 @@ import traceback
 import time
 import hashlib
 import fcntl
+import email.utils
 
 TOKEN_FILENAME = os.path.expanduser("~/.patchew.token")
 
@@ -844,7 +845,8 @@ class ApplyCommand(SubCommand):
             )
             # Only return entries in the form of "First Last <email@address.com>",
             # excluding list addresses
-            return [x for x in lines if "<" in x and ">" in x]
+            m = (email.utils.parseaddr(x) for x in lines if "<" in x and ">" in x)
+            return [{"name": name, "address": address} for name, address in m]
         except:
             return []
 

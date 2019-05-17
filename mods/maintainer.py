@@ -232,11 +232,10 @@ class MaintainerModule(PatchewModule):
 
     def prepare_message_hook(self, request, message, detailed):
         if message.maintainers:
+            maintainers = ("%s <%s>" % (m[0], m[1]) for m in message.maintainers)
+            maintainers = ", ".join(maintainers)
             message.extra_status.append(
-                {
-                    "icon": "fa-user",
-                    "html": "Maintainers: %s" % ", ".join(message.maintainers),
-                }
+                {"icon": "fa-user", "html": "Maintainers: " + maintainers}
             )
 
         if not detailed or not request.user.is_authenticated:

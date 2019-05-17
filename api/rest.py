@@ -490,7 +490,7 @@ class SeriesSerializer(BaseMessageSerializer):
         view_name="results-list", lookup_field="series_message_id"
     )
     total_patches = SerializerMethodField()
-    maintainers = ListField(child=CharField(), required=False)
+    maintainers = AddressSerializer(many=True, required=False)
 
     def __init__(self, *args, **kwargs):
         self.detailed = kwargs.pop("detailed", False)
@@ -509,6 +509,25 @@ class SeriesSerializer(BaseMessageSerializer):
 
     def get_total_patches(self, obj):
         return obj.get_total_patches()
+
+    def create(self, validated_data):
+        if "maintainers" in validated_data:
+            validated_data["maintainers"] = self.fields["maintainers"].create(
+                validated_data["maintainers"]
+            )
+        return super(SeriesSerializer, self).create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "maintainers" in validated_data:
+            print(validated_data["maintainers"])
+            instance.maintainers = self.fields["maintainers"].create(
+                validated_data["maintainers"]
+            )
+            print(instance.maintainers)
+            del validated_data["maintainers"]
+        super(SeriesSerializer, self).update(instance, validated_data)
+        print(instance.maintainers)
+        return instance
 
 
 class SeriesSerializerFull(SeriesSerializer):
