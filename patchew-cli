@@ -848,6 +848,19 @@ class ApplyCommand(SubCommand):
         except:
             return []
 
+    def _pull(self, wd, remote, head, logf=None):
+        if 0 != subprocess.call(
+            ["git", "pull", "--no-edit", remote, head], cwd=wd, stdout=logf, stderr=logf
+        ):
+            raise ApplyFailedException()
+        patchf = tempfile.NamedTemporaryFile()
+        subprocess.check_call(
+            ["git", "format-patch", "--stdout", data["base"]],
+            cwd=wd,
+            stdout=patchf,
+            stderr=patchf,
+        )
+
     def _apply(self, repo, uri, logf=None, signoff=False):
         args = ["git", "am", "-m", "-3"]
         if signoff:
@@ -922,7 +935,11 @@ class ApplyCommand(SubCommand):
                 .decode("utf-8")
                 .strip()
             )
-            patchf = self._apply(wd, toapply["mbox_uri"], logf)
+            pull = toapply.get("pull", False)
+            if pull:
+                patchf = self._pull(wd, pull["repo"], pull["head"], logf)
+            else:
+                patchf = self._apply(wd, toapply["mbox_uri"], logf)
             subprocess.check_call(
                 ["git", "tag", "-f", tag.replace("%m", message_id)],
                 cwd=repo,
